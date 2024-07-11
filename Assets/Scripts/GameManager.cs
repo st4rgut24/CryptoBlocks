@@ -10,6 +10,8 @@ public class GameManager : Singleton<GameManager>
 
     public int totalCoins = 50;
 
+    public Dictionary<Coin, int> CoinTracker = new Dictionary<Coin, int>();
+
     public List<CoinFract> fracts = new List<CoinFract>()
     {
         new CoinFract(Coin.Bitcoin, .3f),
@@ -27,7 +29,6 @@ public class GameManager : Singleton<GameManager>
         float cum = 0;
 
         float rand = UnityEngine.Random.Range(0f, 1f);
-        Debug.Log("Rand value " + rand);
         for (int i=0;i<fracts.Count;i++)
         {
             CoinFract fract = fracts[i];
@@ -43,16 +44,25 @@ public class GameManager : Singleton<GameManager>
         return coin;
     }
 
-    private void OnEnable()
+    public int GetCoinCount(Coin coin)
     {
-
+        return CoinTracker[coin];
     }
 
     private void Awake()
     {
         for (int i = 0; i < totalCoins; i++)
         {
-            coins.Add(GetRandomCoin());
+            Coin coin = GetRandomCoin();
+
+            if (!CoinTracker.ContainsKey(coin))
+            {
+                CoinTracker.Add(coin, 0);
+            }
+
+            CoinTracker[coin]++;
+
+            coins.Add(coin);
         }
     }
 
