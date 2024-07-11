@@ -20,9 +20,6 @@ public class Map : Singleton<Map>
     private GameObject RoomGo;
 
     [SerializeField]
-    private GameObject ResearchRoomGo;
-
-    [SerializeField]
 	private int horCells = 100; // cell count horizontally
 
     List<RoomPrefab> Rooms;
@@ -41,7 +38,6 @@ public class Map : Singleton<Map>
     {
         Controller.TouchEvent += OnSingleTouch;
         Controller.DragEvent += OnDrag;
-        PersonPrefab.DieEvent += OnDie;
     }
 
     private void Awake()
@@ -62,46 +58,6 @@ public class Map : Singleton<Map>
         CreateMap();
 
         RoomPrefab room = CreateRoom(Vector2Int.zero, new Vector2Int(horCells, vertCells), true);
-    }
-
-    public void OnDie(GameObject deadPerson, HealthState healthState)
-    {
-        if (healthState == HealthState.Sick)
-        {
-            Vector2 deathPos = deadPerson.transform.position;
-
-            BurstThroughWalls(deathPos, Consts.BurstWallRadius);
-        }
-    }
-
-    public void BurstThroughWalls(Vector2 blastPos, float burstRadius)
-    {
-        // destroy the wall(s) (if any) closest to the death location
-        RoomPrefab room = FindRoomWorldCoords(blastPos);
-
-        Rooms.ForEach((adjRoom) =>
-        {
-            if (adjRoom == null || room == adjRoom ||  room.IsAdjacentConnectedRoom(adjRoom))
-                // dont need to break down walls if these rooms are already connected
-                return;
-
-            List<Edge> sharedEdges = room.GetSharedEdges(adjRoom);
-
-            for (int s = 0; s < sharedEdges.Count; s++)
-            {
-                Edge edge = sharedEdges[s];
-
-                if (edge.IsAnimating) // a wall under construction cannot be suspended,
-                    // otherwise get weird artifacs resulting from edge visibility being indeterminate
-                    break;
-
-                if (edge.GetClosestDistance(blastPos) < burstRadius)
-                {
-                    JoinRoom(room, adjRoom);
-                    break;
-                }
-            }
-        });
     }
 
     /// <summary>
@@ -176,15 +132,6 @@ public class Map : Singleton<Map>
         room.AnnexSpace(box);
 
         Rooms.Add(room);
-
-
-        if (!PersonPlotter.Instance.IsPeopleInBounds(box.bounds))
-        {
-            GameObject ResearchPrefab = Instantiate(ResearchRoomGo);
-            ResearchPrefab.transform.SetParent(RoomObject.transform);
-
-            ResearchPrefab.GetComponent<ResearchCenterPrefab>().InitSpace(room.box);
-        }
 
         if (!IsFirstRoomCreated)
         {

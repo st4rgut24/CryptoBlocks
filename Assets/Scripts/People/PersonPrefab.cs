@@ -31,8 +31,6 @@ public class PersonPrefab : MonoBehaviour
     private Vector2 targetPosition;
     private Vector2 randomDirection;
 
-    private bool isImmunizing = false;
-
     public HealthState healthState;
 
     float timeSick = 0;
@@ -55,9 +53,6 @@ public class PersonPrefab : MonoBehaviour
 	// Update is called once per frame
 	void Update()
 	{
-        if (isImmunizing) // if immunizing another cell, attach to that cell and do not move self
-            return;
-
         // Move towards the target position
         transform.position = Vector2.MoveTowards(transform.position, targetPosition, moveSpeed * Time.deltaTime);
 
@@ -67,100 +62,7 @@ public class PersonPrefab : MonoBehaviour
             // Get a new random target position
             targetPosition = GetRandomPosition();
         }
-
-        if (healthState == HealthState.Sick)
-        {
-            timeSick += Time.deltaTime;
-            float t = timeSick / sickSec;
-            spriteRenderer.color = Color.Lerp(HealthyColor, InfectedColor, t);
-
-            if (timeSick >= sickSec)
-                processSickOutcome();
-        }
     }
-
-    public void Die()
-    {
-        GameObject.Destroy(gameObject);
-        DieEvent?.Invoke(gameObject, healthState);
-    }
-
-    private void processSickOutcome()
-    {
-        float chance = Random.Range(0f, 1f);
-
-        if (chance < Consts.fatalityProb)
-        {
-            GameObject Splatter = GameObject.Instantiate(DeathParticles);
-            Splatter.transform.position = transform.position;
-
-            Die();
-        }
-        else
-        {
-            SetHealthState(HealthState.Immune);
-            moveSpeed *= 2;
-            maxDistance *= 2;
-            // move faster and farther to aid in spreading immunity
-        }
-    }
-
-    public void SetHealthState(HealthState healthState)
-    {
-        this.healthState = healthState;
-        StyleByHealthState(healthState);
-    }
-
-    private void StyleByHealthState(HealthState healthState)
-    {
-        Color color;
-        spriteRenderer.color = Color.white; // set default color of sprite
-
-        switch (healthState)
-        {
-            case HealthState.Sick:
-                spriteRenderer.sprite = SickSprite; 
-                break;
-            case HealthState.Healthy:
-                spriteRenderer.sprite = HealthySprite;
-                break;
-            case HealthState.Immune:
-                spriteRenderer.sprite = ImmuneSprite;
-                break;
-            default:
-                color = Color.white;
-                break;
-        }
-    }
-
-    private bool IsImmuneEncounter(HealthState otherHealthState)
-    {
-        bool IsImmuneScenario = healthState == HealthState.Immune && otherHealthState == HealthState.Sick && !isImmunizing;
-
-        bool ImmunityChance = Random.Range(0f, 1f) < Consts.immunityProb;
-
-        return IsImmuneScenario && ImmunityChance;
-    }
-
-
-    private IEnumerator processImmuneEncounter(PersonPrefab ImmunePerson, PersonPrefab SickPerson)
-    {
-        Transform originalImmuneParent = ImmunePerson.transform.parent;
-
-        isImmunizing = true;
-        transform.SetParent(SickPerson.transform);
-
-        SickPerson.healthState = HealthState.Healing; // dont die while healing
-
-        yield return new WaitForSeconds(Consts.immunityCooldownSec);
-        // add a cooldown period
-
-        isImmunizing = false;
-        transform.SetParent(originalImmuneParent);
-
-        SickPerson.SetHealthState(HealthState.Immune);
-    }
-
     public void SetTargetPosition(Vector3 targetPosition)
     {
         this.targetPosition = targetPosition;
@@ -175,15 +77,6 @@ public class PersonPrefab : MonoBehaviour
 
     private void OnTriggerEnter2D(Collider2D collision)
     {
-        if (collision.gameObject.CompareTag(Consts.PersonTag))
-        {
-            PersonPrefab otherPerson = collision.gameObject.GetComponent<PersonPrefab>();
-
-            if (IsImmuneEncounter(otherPerson.healthState))
-            {
-                StartCoroutine(processImmuneEncounter(this, otherPerson));
-            }
-        }
         if (collision.gameObject.CompareTag(Consts.RoomTag))
         {
             Vector3 closestPoint = collision.ClosestPoint(transform.position);
