@@ -107,16 +107,20 @@ public class PersonPlotter : Singleton<PersonPlotter>
 
 	void InitPopulation(Vector2 minWorldPoint, Vector2 maxWorldPoint)
 	{
-		for (int i=0;i<population;i++)
+		GameManager.Instance.coins.ForEach((coin =>
 		{
-			float randWorldX = Random.Range(minWorldPoint.x, maxWorldPoint.x);
-			float randWorldY = Random.Range(minWorldPoint.y, maxWorldPoint.y);
+            float randWorldX = Random.Range(minWorldPoint.x, maxWorldPoint.x);
+            float randWorldY = Random.Range(minWorldPoint.y, maxWorldPoint.y);
 
-			GameObject PersonGo = Instantiate(PersonPrefabInst, PersonParentTransform);
-			PersonGo.transform.position = new Vector2(randWorldX, randWorldY);
+            GameObject PersonGo = Instantiate(PersonPrefabInst, PersonParentTransform);
+            PersonPrefab person = PersonGo.GetComponent<PersonPrefab>();
 
-			PersonsList.Add(PersonGo);
-		}
+            person.InitCoin(coin);
+
+            PersonGo.transform.position = new Vector2(randWorldX, randWorldY);
+
+            PersonsList.Add(PersonGo);
+        }));
 	}
 
     private void OnDisable()

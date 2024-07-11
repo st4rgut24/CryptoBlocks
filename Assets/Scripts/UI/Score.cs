@@ -27,9 +27,33 @@ public class Score : MonoBehaviour
         //PersonPrefab.DieEvent -= OnDie;
     }
 
-    public void SetScore(int score)
+    public void SetScore(float elapsedTime)
     {
-        string scoreStr = score.ToString() + "/" + population.ToString();
+        int minutes = (int)elapsedTime / 60;
+        int seconds = (int)elapsedTime % 60;
+
+        string minString = "";
+        string secString = "";
+
+        if (minutes < 10)
+        {
+            minString = "0" + minutes.ToString();
+        }
+        else
+        {
+            minString = minutes.ToString();
+        }
+
+        if (seconds < 10)
+        {
+            secString = "0" + seconds.ToString();
+        }
+        else
+        {
+            secString = seconds.ToString();
+        }
+
+        string scoreStr = minString + " : " + secString;
         scoreText.text = scoreStr;
     }
 }

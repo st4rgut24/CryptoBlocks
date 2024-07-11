@@ -1,6 +1,7 @@
 ﻿using UnityEngine;
 using System.Collections;
 using System.Collections.Generic;
+using System.Drawing;
 
 public enum HealthState
 {
@@ -12,18 +13,20 @@ public enum HealthState
 
 public class PersonPrefab : MonoBehaviour
 {
+    public Sprite bitcoinSprite;
+    public Sprite litecoinSprite;
+    public Sprite ethereumSprite;
+    public Sprite dodgecoinSprite;
+    public Sprite ShibaSprite;
+
     SpriteRenderer spriteRenderer;
 
-    public Sprite SickSprite;
-    public Sprite HealthySprite;
-    public Sprite ImmuneSprite;
+    public Coin coin;
+    public Sprite CoinSprite;
 
     public GameObject DeathParticles;
 
     public static System.Action<GameObject, HealthState> DieEvent;
-
-    public Color HealthyColor = Color.white;
-    public Color InfectedColor = Color.red;
 
     public float moveSpeed = 2f;
     public float maxDistance = 2f;
@@ -68,6 +71,31 @@ public class PersonPrefab : MonoBehaviour
         this.targetPosition = targetPosition;
     }
 
+    public void InitCoin(Coin coin)
+    {
+        switch (coin)
+        {
+            case Coin.Bitcoin:
+                spriteRenderer.sprite = bitcoinSprite;
+                break;
+            case Coin.Ethereum:
+                spriteRenderer.sprite = ethereumSprite;
+                break;
+            case Coin.Litecoin:
+                spriteRenderer.sprite = litecoinSprite;
+                break;
+            case Coin.Dodgecoin:
+                spriteRenderer.sprite = dodgecoinSprite;
+                break;
+            case Coin.Shiba:
+                spriteRenderer.sprite = ShibaSprite;
+                break;
+            default:
+                spriteRenderer.sprite = bitcoinSprite;
+                break;
+        }
+    }
+
     Vector3 GetRandomPosition()
     {
         // Generate a random position within a maxDistance radius
@@ -84,7 +112,7 @@ public class PersonPrefab : MonoBehaviour
 
             // Set the target position based on the opposite direction and move distance
             targetPosition = transform.position + new Vector3(oppositeDirection.x, oppositeDirection.y, 0f) * 5;
-            Debug.DrawRay(closestPoint, oppositeDirection, Color.magenta, 1000);
+            Debug.DrawRay(closestPoint, oppositeDirection, UnityEngine.Color.magenta, 1000);
         }
     }
 }
