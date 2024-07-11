@@ -1,7 +1,6 @@
 ﻿using UnityEngine;
 using System.Collections;
 using System.Collections.Generic;
-using System.Linq;
 
 /// <summary>
 /// The map defining the layout of the spaces
@@ -71,6 +70,9 @@ public class Map : Singleton<Map>
             return;
 
         RoomPrefab room = FindRoom(Input.mousePosition);
+
+        if (room.RoomLocked)
+            return;
 
         if (room.IsRoomCompleted())
         {
@@ -150,6 +152,11 @@ public class Map : Singleton<Map>
     /// </summary>
     public void JoinRoom(RoomPrefab room1, RoomPrefab room2)
     {
+        if (room1.RoomLocked || room2.RoomLocked)
+        {
+            return;
+        }
+
         if (room1.AdjacentConnectedRooms.Contains(room2))
         {
             // exit if these rooms are already joined
@@ -173,6 +180,32 @@ public class Map : Singleton<Map>
 
         room1.AddConnectedRoom(room2);
         room2.AddConnectedRoom(room1);
+
+        // after joining a room, check if the connected rooms are lockable
+        HashSet<RoomPrefab> SeenRoomSet = new HashSet<RoomPrefab>();
+        GetAllConnectedRooms(room1, SeenRoomSet);
+
+        List<RoomPrefab> roomList = new List<RoomPrefab>(SeenRoomSet);
+        bool IsLockable = LockRooms(roomList);
+
+        if (IsLockable)
+        {
+            Debug.Log("Rooms are lockable");
+        }
+
+    }
+
+    void GetAllConnectedRooms(RoomPrefab room, HashSet<RoomPrefab> SeenRooms)
+    {
+        SeenRooms.Add(room);
+
+        room.AdjacentConnectedRooms.ForEach((adjRoom) =>
+        {
+            if (!SeenRooms.Contains(adjRoom))
+            {
+                GetAllConnectedRooms(adjRoom, SeenRooms);
+            }
+        });
     }
 
     /// <summary>
@@ -181,6 +214,70 @@ public class Map : Singleton<Map>
     private void FillRoom(RoomPrefab room)
     {
         room.CreatePerimeter(true);
+
+        StartCoroutine(IsRoomLockable(room));
+    }
+
+    private IEnumerator IsRoomLockable(RoomPrefab room)
+    {
+        yield return new WaitForSeconds(1);// wait for edges to finish expanding
+
+        bool IsLockable = LockRooms(new List<RoomPrefab>() { room });
+
+        if (IsLockable) {
+            Debug.Log("Room with name " + room.name + " is lockable");
+        }
+    } 
+
+    private bool LockRooms(List<RoomPrefab> rooms)
+    {
+        List<GameObject> PersonsList = PersonPlotter.Instance.PersonsList;
+
+        int coinCount = 0;
+
+        Coin foundCoin = Coin.Unknown;
+
+        for (int x = 0; x < rooms.Count; x++)
+        {
+            RoomPrefab room = rooms[x];
+
+            for (int i = 0; i < PersonsList.Count; i++)
+            {
+                GameObject PersonGo = PersonsList[i];
+
+                // room's adjacent connected rooms and their adjacent connected rooms
+                if (room.BoundsContains(PersonGo.transform.position))
+                {
+                    coinCount++;
+                    Coin coin = PersonGo.GetComponent<PersonPrefab>().coin;
+
+                    // all coins in the room  must be thes ame type
+                    if (foundCoin != Coin.Unknown && foundCoin != coin)
+                    {
+                        Debug.Log("Coins of different types found, cannot lockdown area");
+                        return false;
+                    }
+
+                    foundCoin = coin;
+                }
+            }
+        };
+
+        if (foundCoin != Coin.Unknown && coinCount == GameManager.Instance.GetCoinCount(foundCoin))
+        {
+            rooms.ForEach((room) =>
+            {
+                // it is lockable
+                room.RoomLocked = true;
+            });
+
+            return true;
+        }
+        else
+        {
+            Debug.Log("Coun of coin does not match expected count");
+            return false;
+        }
     }
 
     /// <summary>
@@ -232,6 +329,9 @@ public class Map : Singleton<Map>
 
         room1.AddAdjacentRoom(room2);
         room2.AddAdjacentRoom(room1);
+
+        StartCoroutine(IsRoomLockable(room1));
+        StartCoroutine(IsRoomLockable(room2));
     }
 
     private void RemoveRoom(RoomPrefab room)

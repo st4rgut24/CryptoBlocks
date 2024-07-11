@@ -94,6 +94,8 @@ public class PersonPrefab : MonoBehaviour
                 spriteRenderer.sprite = bitcoinSprite;
                 break;
         }
+
+        this.coin = coin;
     }
 
     Vector3 GetRandomPosition()

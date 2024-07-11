@@ -6,9 +6,9 @@ using System;
 public class GameManager : Singleton<GameManager>
 {
     Score score;
-    public float timer = 0;
+    private float timer = 0;
 
-    public int totalCoins = 50;
+    private int totalCoins = 10;
 
     public Dictionary<Coin, int> CoinTracker = new Dictionary<Coin, int>();
 

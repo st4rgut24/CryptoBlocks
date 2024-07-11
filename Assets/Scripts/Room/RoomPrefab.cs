@@ -8,6 +8,8 @@ using UnityEngine.UIElements;
  */
 public class RoomPrefab: MonoBehaviour
 {
+    public bool RoomLocked = false;
+
     public List<RoomPrefab> AdjacentRooms;
     public List<RoomPrefab> AdjacentConnectedRooms;
 
@@ -140,6 +142,11 @@ public class RoomPrefab: MonoBehaviour
             AddAdjacentRoom(room);
         }
         AdjacentConnectedRooms.Add(room);
+    }
+
+    public bool BoundsContains(Vector2 coord)
+    {
+        return this.box.bounds.Contains(coord);
     }
 
     public Cell Contains(Vector2 coord)

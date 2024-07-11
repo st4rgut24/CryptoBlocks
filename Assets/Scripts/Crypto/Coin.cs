@@ -3,6 +3,7 @@ using System.Collections;
 
 public enum Coin
 {
+    Unknown,
     Bitcoin,
     Ethereum,
     Litecoin,
