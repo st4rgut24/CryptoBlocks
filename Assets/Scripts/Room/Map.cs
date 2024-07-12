@@ -10,6 +10,9 @@ using System.Collections.Generic;
 public class Map : Singleton<Map>
 {
     [SerializeField]
+    private GameObject BlockRoomPrefab;
+
+    [SerializeField]
     private Transform RoomDaddy;
 
     [SerializeField]
@@ -271,6 +274,10 @@ public class Map : Singleton<Map>
                 room.RoomLocked = true;
             });
 
+            SetParticles(rooms, foundCoin);
+
+            GameManager.Instance.CheckWinCondition(coinCount);
+
             return true;
         }
         else
@@ -278,6 +285,17 @@ public class Map : Singleton<Map>
             Debug.Log("Coun of coin does not match expected count");
             return false;
         }
+    }
+
+    public void SetParticles(List<RoomPrefab> rooms, Coin coin)
+    {
+        rooms.ForEach((room) =>
+        {
+            GameObject PartyRoomGo = Instantiate(BlockRoomPrefab);
+            BlockRoom br = PartyRoomGo.GetComponent<BlockRoom>();
+
+            br.Init(coin, room.box);
+        });
     }
 
     /// <summary>
